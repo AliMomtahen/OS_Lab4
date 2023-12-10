@@ -33,4 +33,7 @@ SYSCALL(find_digital_root)
 SYSCALL(get_uncle_count)
 SYSCALL(get_process_lifetime)
 SYSCALL(copy_file)
+SYSCALL(sys_change_proc_queue)
+SYSCALL(sys_change_param_bjf)
+SYSCALL(sys_change_param_bjf_all)
 

@@ -24,4 +24,8 @@
 #define SYS_get_uncle_count 23
 #define SYS_get_process_lifetime 24
 #define SYS_copy_file 25
+#define SYS_change_proc_queue 26
+#define SYS_change_param_bjf 27
+#define SYS_change_param_bjf_all 28
+
 

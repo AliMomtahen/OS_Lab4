@@ -127,6 +127,13 @@ found:
   memset(p->context, 0, sizeof *p->context);
   p->context->eip = (uint)forkret;
 
+  memset(&p->sched_info, 0, sizeof(p->sched_info));
+  p->sched_info.queue = UNSET;
+  p->sched_info.bjf.priority = BJF_PRIORITY_DEF;
+  p->sched_info.bjf.priority_ratio = 1;
+  p->sched_info.bjf.arrival_time_ratio = 1;
+  p->sched_info.bjf.executed_cycle_ratio = 1;
+
   return p;
 }
 
@@ -187,6 +194,35 @@ growproc(int n)
   curproc->sz = sz;
   switchuvm(curproc);
   return 0;
+}
+
+int
+change_queue(int pid, int new_queue) {
+  struct proc *p;
+  int old_queue = -1;
+
+  if(new_queue == UNSET){
+    if (pid == 1)
+      new_queue = ROUND_ROBIN;
+    else if (pid > 1)
+      new_queue = LOTTERY;
+    else
+      return -1;
+  }
+
+  acquire(&ptable.lock);
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    if(p->pid == pid){
+      old_queue = p->sched_info.queue;
+      p->sched_info.queue = new_queue;
+      // if (new_queue == LOTTERY && p->sched_info.tickets_count <= 0) {
+      //   p->sched_info.tickets_count = (rand() % MAX_RANDOM_TICKETS) + 1;
+      // }
+      break;
+    }
+  }
+  release(&ptable.lock);
+  return old_queue;
 }
 
 // Create a new process copying p as the parent.
@@ -335,39 +371,122 @@ wait(void)
 //  - swtch to start running that process
 //  - eventually that process transfers control
 //      via swtch back to the scheduler.
+
+struct proc*
+roundrobin(struct proc *lastScheduled)
+{
+  struct proc *p = lastScheduled;
+  for (;;)
+  {
+    p++;
+    if (p >= &ptable.proc[NPROC])
+      p = ptable.proc;
+
+    if (p->state == RUNNABLE || p->sched_info.queue == ROUND_ROBIN)
+      return p;
+
+    if (p == lastScheduled)
+      return 0;
+  }
+}
+
+struct proc*
+get_LCFS(struct proc *lastScheduled)
+{
+  struct proc *p_result = 0;
+  struct proc *p = 0;
+
+  int max_arv_time =-1 ;
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    if(p->state == RUNNABLE && 
+      p->sched_info.bjf.arrival_time > max_arv_time){
+        max_arv_time = p->sched_info.bjf.arrival_time;
+        p_result = p;
+    }
+  }
+
+  return p_result;
+}
+
+static float
+bjfrank(struct proc* p)
+{
+  return p->sched_info.bjf.priority * p->sched_info.bjf.priority_ratio +
+         p->sched_info.bjf.arrival_time * p->sched_info.bjf.arrival_time_ratio +
+         p->sched_info.bjf.executed_cycle * p->sched_info.bjf.executed_cycle_ratio;
+}
+
+struct proc*
+bestjobfirst(void)
+{
+  struct proc* result = 0;
+  float minrank;
+
+  struct proc* p;
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    if(p->state != RUNNABLE || p->sched_info.queue != BJF)
+      continue;
+    float rank = bjfrank(p);
+    if(result == 0 || rank < minrank){
+      result = p;
+      minrank = rank;
+    }
+  }
+
+  return result;
+}
+
+
+
+
 void
 scheduler(void)
 {
   struct proc *p;
+  struct proc *lastScheduledRR = &ptable.proc[NPROC - 1];
   struct cpu *c = mycpu();
   c->proc = 0;
-  
+  //srand(ticks);
+
   for(;;){
     // Enable interrupts on this processor.
     sti();
 
-    // Loop over process table looking for process to run.
     acquire(&ptable.lock);
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if(p->state != RUNNABLE)
-        continue;
 
-      // Switch to chosen process.  It is the process's job
-      // to release ptable.lock and then reacquire it
-      // before jumping back to us.
-      c->proc = p;
-      switchuvm(p);
-      p->state = RUNNING;
-
-      swtch(&(c->scheduler), p->context);
-      switchkvm();
-
-      // Process is done running for now.
-      // It should have changed its p->state before coming back.
-      c->proc = 0;
+    p = roundrobin(lastScheduledRR);
+    if(p){
+      lastScheduledRR = p;
+  
     }
-    release(&ptable.lock);
+    else{
+        
+      p = get_LCFS(lastScheduledRR);
+      if(!p){
+        p = bestjobfirst();
+        if(!p){
+          release(&ptable.lock);
+          continue;
+        }
+      }
+    }
 
+    // Switch to chosen process.  It is the process's job
+    // to release ptable.lock and then reacquire it
+    // before jumping back to us.
+    c->proc = p;
+    switchuvm(p);
+    p->state = RUNNING;
+
+    p->sched_info.last_run = ticks;
+    p->sched_info.bjf.executed_cycle += 0.1f;
+
+    swtch(&(c->scheduler), p->context);
+    switchkvm();
+    // Process is done running for now.
+    // It should have changed its p->state before coming back.
+    c->proc = 0;
+    release(&ptable.lock);
   }
 }
 
