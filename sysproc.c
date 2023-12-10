@@ -107,3 +107,52 @@ int sys_get_uncle_count(void){
   return get_uncle_count(pid);
 }
 
+
+int sys_change_proc_queue(void){
+  int pid;
+  int new_q;
+  if(argint(0, &pid) < 0 || argint(1 , &new_q)){
+    return -1;
+  }
+  return change_queue(pid , new_q);
+}
+int sys_change_param_bjf(void){
+  int pid;
+  float priority_ratio, arrival_time_ratio, executed_cycle_ratio,
+    process_size_ratio;
+  if(argint(0, &pid) < 0 ||
+     argfloat(1, &priority_ratio) < 0 ||
+     argfloat(2, &arrival_time_ratio) < 0 ||
+     argfloat(3, &executed_cycle_ratio) < 0 || 
+     argfloat(4, &process_size_ratio) < 0)
+     
+     {
+    return -1;
+  }
+  return  change_param_proc(pid, priority_ratio, arrival_time_ratio,
+        executed_cycle_ratio , process_size_ratio);
+}
+int sys_change_param_bjf_all(void){
+  float priority_ratio, arrival_time_ratio, executed_cycle_ratio,
+    process_size_ratio;
+  if(
+     argfloat(1, &priority_ratio) < 0 ||
+     argfloat(2, &arrival_time_ratio) < 0 ||
+     argfloat(3, &executed_cycle_ratio) < 0 || 
+     argfloat(4, &process_size_ratio) < 0)
+     
+     {
+    return -1;
+  }
+  return change_param_of_all(priority_ratio , arrival_time_ratio
+          ,executed_cycle_ratio , process_size_ratio);
+  
+}
+
+
+
+int sys_print_info_proc(void){
+  print_info();
+  return -1;
+}
+

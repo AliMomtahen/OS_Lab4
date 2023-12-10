@@ -38,7 +38,7 @@ struct context {
 #define BJF_PRIORITY_MAX 5
 #define MAX_RANDOM_TICKETS 10
 
-enum schedqueue { UNSET, ROUND_ROBIN, LOTTERY, BJF };
+enum schedqueue { UNSET, ROUND_ROBIN, LCFS, BJF };
 
 struct bjfinfo {
   int priority;
@@ -47,6 +47,8 @@ struct bjfinfo {
   float arrival_time_ratio;
   float executed_cycle;
   float executed_cycle_ratio;
+  float process_size;
+  float process_size_ratio;
 };
 
 struct schedinfo {
@@ -85,3 +87,5 @@ struct proc {
 
 int get_process_lifetime(int);
 int get_uncle_count(int pid);
+int change_queue(int pid , int new_queue);
+void print_info();

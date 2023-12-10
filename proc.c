@@ -133,6 +133,9 @@ found:
   p->sched_info.bjf.priority_ratio = 1;
   p->sched_info.bjf.arrival_time_ratio = 1;
   p->sched_info.bjf.executed_cycle_ratio = 1;
+  p->sched_info.bjf.process_size_ratio = 1;
+  p->sched_info.bjf.process_size = sizeof(p);
+
 
   return p;
 }
@@ -205,7 +208,7 @@ change_queue(int pid, int new_queue) {
     if (pid == 1)
       new_queue = ROUND_ROBIN;
     else if (pid > 1)
-      new_queue = LOTTERY;
+      new_queue = LCFS;
     else
       return -1;
   }
@@ -319,6 +322,29 @@ exit(void)
   panic("zombie exit");
 }
 
+void
+ageprocs(int osTicks)
+{
+  struct proc *p;
+
+  acquire(&ptable.lock);
+
+  for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
+  {
+    if (p->state == RUNNABLE && p->sched_info.queue != ROUND_ROBIN)
+    {
+      if (osTicks - p->sched_info.last_run > 8000)
+      {
+        release(&ptable.lock);
+        change_queue(p->pid, ROUND_ROBIN);
+        acquire(&ptable.lock);
+      }
+    }
+  }
+
+  release(&ptable.lock);
+}
+
 // Wait for a child process to exit and return its pid.
 // Return -1 if this process has no children.
 int
@@ -411,9 +437,12 @@ get_LCFS(struct proc *lastScheduled)
 static float
 bjfrank(struct proc* p)
 {
-  return p->sched_info.bjf.priority * p->sched_info.bjf.priority_ratio +
-         p->sched_info.bjf.arrival_time * p->sched_info.bjf.arrival_time_ratio +
-         p->sched_info.bjf.executed_cycle * p->sched_info.bjf.executed_cycle_ratio;
+  float res;
+  res = p->sched_info.bjf.priority * p->sched_info.bjf.priority_ratio +
+                      p->sched_info.bjf.arrival_time * p->sched_info.bjf.arrival_time_ratio +
+                      p->sched_info.bjf.executed_cycle * p->sched_info.bjf.executed_cycle_ratio +
+                      p->sched_info.bjf.process_size * p->sched_info.bjf.process_size_ratio;
+  return res;
 }
 
 struct proc*
@@ -459,8 +488,7 @@ scheduler(void)
       lastScheduledRR = p;
   
     }
-    else{
-        
+    else{    
       p = get_LCFS(lastScheduledRR);
       if(!p){
         p = bestjobfirst();
@@ -693,6 +721,151 @@ get_uncle_count(int pid)
 
   return sum;
 }
+
+int change_param_of_all(float priority_ratio, float arrival_time_ratio, 
+    float executed_cycles_ratio , float process_size_ratio)
+{
+  acquire(&ptable.lock);
+  struct proc* p;
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    p->sched_info.bjf.priority_ratio = priority_ratio;
+    p->sched_info.bjf.arrival_time_ratio = arrival_time_ratio;
+    p->sched_info.bjf.executed_cycle_ratio = executed_cycles_ratio;
+    p->sched_info.bjf.process_size_ratio = process_size_ratio;
+  }
+  release(&ptable.lock);
+  return -1;
+}
+
+
+int change_param_proc(int pid, float priority_ratio, float arrival_time_ratio, 
+    float executed_cycles_ratio , float process_size_ratio)
+{
+  acquire(&ptable.lock);
+  struct proc* p;
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    if(p->pid == pid){
+      p->sched_info.bjf.priority_ratio = priority_ratio;
+      p->sched_info.bjf.arrival_time_ratio = arrival_time_ratio;
+      p->sched_info.bjf.executed_cycle_ratio = executed_cycles_ratio;
+      p->sched_info.bjf.process_size_ratio = process_size_ratio;
+      
+      release(&ptable.lock);
+      return 0;
+    }
+  }
+  release(&ptable.lock);
+  return -1;
+}
+
+
+int find_digit_number(int x){
+  int y=0;
+  while (x)
+  {
+     x = x / 10;
+     y++;
+  }
+  return y;
+  
+}
+
+void print_info(){
+  struct proc *p=0;
+  cprintf ("PName PID State    Queue Cycle Arrival Priority R_Prty R_Arvl R_Exec R_Size Rank\n");
+  cprintf ("--------------------------------------------------------------------------------\n");
+  int i=0;
+  char *state;
+  for (p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
+    if (p->state != UNUSED) {
+      switch(p->state){
+      case SLEEPING: {
+        state = "sleeping";
+      }break;
+      case RUNNING:{
+        state = "running";
+      }break;
+      case RUNNABLE: {
+        state = "runnable";
+      }break;
+      case ZOMBIE:
+        state = "zombie";
+      break;
+      case EMBRYO: {
+        state = "embryo";
+      }break;
+
+      default:
+        state = "-";
+        break;
+      }
+
+      cprintf ("%s", p->name);
+      for (i = 0; i < 6 - strlen (p->name); i++) {
+        cprintf (" ");
+      }
+
+      cprintf ("%d", p->pid);
+      for (i = 0; i < 4 - find_digit_number(p->pid); i++) {
+        cprintf (" ");
+      }
+
+      cprintf ("%s", state);
+      for (i = 0; i < 9 - strlen (state); i++) {
+        cprintf (" ");
+      }
+
+      cprintf ("%d", p->sched_info.queue);
+      for (i = 0; i < 6 - find_digit_number (p->sched_info.queue); i++) {
+        cprintf (" ");
+      }
+
+      cprintf ("%d", (int)p->sched_info.bjf.executed_cycle);
+      for (i = 0; i < 6 - find_digit_number ((int)p->sched_info.bjf.executed_cycle); i++) {
+        cprintf (" ");
+      }
+
+      cprintf ("%d", p->sched_info.bjf.arrival_time);
+      for (i = 0; i < 8 - find_digit_number (p->sched_info.bjf.arrival_time); i++) {
+        cprintf (" ");
+      }
+
+      cprintf ("%d", p->sched_info.bjf.priority);
+      for (i = 0; i < 9 - find_digit_number (p->sched_info.bjf.priority); i++) {
+        cprintf (" ");
+      }
+
+      cprintf ("%d", (int)p->sched_info.bjf.priority_ratio);
+      for (i = 0; i < 7 - find_digit_number ((int)p->sched_info.bjf.priority_ratio); i++) {
+        cprintf (" ");
+      }
+
+      cprintf ("%d", (int)p->sched_info.bjf.arrival_time_ratio);
+      for (i = 0; i < 7 - find_digit_number ((int)p->sched_info.bjf.arrival_time_ratio); i++) {
+        cprintf (" ");
+      }
+
+      cprintf ("%d", (int)p->sched_info.bjf.executed_cycle_ratio);
+      for (i = 0; i < 7 - find_digit_number ((int)p->sched_info.bjf.executed_cycle_ratio); i++) {
+        cprintf (" ");
+      }
+
+      cprintf ("%d", (int)p->sched_info.bjf.process_size_ratio);
+      for (i = 0; i < 7 - find_digit_number ((int)p->sched_info.bjf.process_size_ratio); i++) {
+        cprintf (" ");
+      }
+
+      cprintf ("%d", (int)bjfrank(p));
+      for (i = 0; i < 4 - find_digit_number ((int)bjfrank(p)); i++) {
+        cprintf (" ");
+      }
+
+      cprintf ("\n");
+    }
+  }
+
+}
+
 
 
 

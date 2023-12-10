@@ -25,6 +25,18 @@ fetchint(uint addr, int *ip)
   return 0;
 }
 
+int
+fetchfloat(uint addr, float *fp)
+{
+  struct proc *p = myproc();
+
+  if(addr >= p->sz || addr+4 > p->sz)
+    return -1;
+  *fp = *(float*)(addr);
+  return 0;
+}
+
+
 // Fetch the nul-terminated string at addr from the current process.
 // Doesn't actually copy the string - just sets *pp to point at it.
 // Returns length of string, not including nul.
@@ -43,6 +55,12 @@ fetchstr(uint addr, char **pp)
       return s - *pp;
   }
   return -1;
+}
+
+int
+argfloat(int n, float *fp)
+{
+  return fetchfloat((myproc()->tf->esp) + 4 + 4*n, fp);
 }
 
 // Fetch the nth 32-bit system call argument.
@@ -110,6 +128,7 @@ extern int sys_copy_file(void);
 extern int sys_change_proc_queue(void);
 extern int sys_change_param_bjf(void);
 extern int sys_change_param_bjf_all(void);
+extern int sys_print_info_proc(void);
 
 static int (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
@@ -140,6 +159,7 @@ static int (*syscalls[])(void) = {
 [SYS_change_proc_queue] sys_change_proc_queue,
 [SYS_change_param_bjf] sys_change_param_bjf,
 [SYS_change_param_bjf_all] sys_change_param_bjf_all,
+[SYS_print_info_proc]  sys_print_info_proc,
 };
 
 void
