@@ -159,7 +159,7 @@ static int (*syscalls[])(void) = {
 [SYS_change_proc_queue] sys_change_proc_queue,
 [SYS_change_param_bjf] sys_change_param_bjf,
 [SYS_change_param_bjf_all] sys_change_param_bjf_all,
-[SYS_print_info_proc]  sys_print_info_proc,
+[SYS_print_info_proc]  sys_print_info_proc
 };
 
 void

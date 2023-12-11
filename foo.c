@@ -2,7 +2,7 @@
 #include "user.h"
 // #include <stdio.h>
 
-#define PROCS_NUM 10
+#define PROCS_NUM 5
 
 int main()
 {

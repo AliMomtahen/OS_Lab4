@@ -118,6 +118,7 @@ int sys_change_proc_queue(void){
 }
 int sys_change_param_bjf(void){
   int pid;
+  
   float priority_ratio, arrival_time_ratio, executed_cycle_ratio,
     process_size_ratio;
   if(argint(0, &pid) < 0 ||
@@ -127,23 +128,26 @@ int sys_change_param_bjf(void){
      argfloat(4, &process_size_ratio) < 0)
      
      {
+      
     return -1;
   }
   return  change_param_proc(pid, priority_ratio, arrival_time_ratio,
         executed_cycle_ratio , process_size_ratio);
 }
 int sys_change_param_bjf_all(void){
+  
   float priority_ratio, arrival_time_ratio, executed_cycle_ratio,
     process_size_ratio;
   if(
-     argfloat(1, &priority_ratio) < 0 ||
-     argfloat(2, &arrival_time_ratio) < 0 ||
-     argfloat(3, &executed_cycle_ratio) < 0 || 
-     argfloat(4, &process_size_ratio) < 0)
+     argfloat(0, &priority_ratio) < 0 ||
+     argfloat(1, &arrival_time_ratio) < 0 ||
+     argfloat(2, &executed_cycle_ratio) < 0 || 
+     argfloat(3, &process_size_ratio) < 0)
      
      {
     return -1;
   }
+  
   return change_param_of_all(priority_ratio , arrival_time_ratio
           ,executed_cycle_ratio , process_size_ratio);
   
@@ -152,7 +156,8 @@ int sys_change_param_bjf_all(void){
 
 
 int sys_print_info_proc(void){
+  //cprintf("Ajaba\n");
   print_info();
-  return -1;
+  return 0;
 }
 

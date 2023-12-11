@@ -27,7 +27,7 @@
 #define SYS_change_proc_queue 26
 #define SYS_change_param_bjf 27
 #define SYS_change_param_bjf_all 28
-#define SYS_print_info_proc 28
+#define SYS_print_info_proc 29
 
 
 
