@@ -1,6 +1,8 @@
 
 #pragma once
 
+
+
 struct max_lock
 {
     unsigned int locked;       // Is the lock held?
@@ -12,7 +14,7 @@ struct max_lock
 
 struct max_queue
 {
-    struct proc* proc;
+    int proc;
     struct max_queue* next;
 };
 
@@ -21,9 +23,9 @@ struct max_queue
 void
 initlock_max(struct max_lock *lk, char *name);
 
-void add_to_max_queue(struct max_lock *lk, struct proc* proc);
+void add_to_max_queue(struct max_lock *lk, int proc);
 
-struct proc* get_from_queue(struct max_queue *queue);
+int get_from_queue(struct max_lock *queue);
 
 void
 acquire_max_lock(struct max_lock *lk);

@@ -29,6 +29,8 @@
 #define SYS_change_param_bjf_all 28
 #define SYS_print_info_proc 29
 #define SYS_count_syscall 30
+#define SYS_test_max_lock 31
+
 
 
 

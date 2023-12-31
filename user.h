@@ -32,6 +32,7 @@ int change_param_bjf(int , float , float , float , float);
 int change_param_bjf_all(float , float ,float , float);
 int print_info_proc(void);
 int count_syscall(void);
+int test_max_lock(void);
 
 // ulib.c
 int stat(const char*, struct stat*);

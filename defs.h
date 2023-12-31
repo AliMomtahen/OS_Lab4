@@ -9,6 +9,7 @@ struct spinlock;
 struct sleeplock;
 struct stat;
 struct superblock;
+struct max_lock;
 
 // bio.c
 void            binit(void);
@@ -119,6 +120,7 @@ void            sleep(void*, struct spinlock*);
 void            userinit(void);
 int             wait(void);
 void            wakeup(void*);
+void            wakeup_max(void* , int);
 void            yield(void);
 void            ageprocs(int);
 
@@ -139,6 +141,11 @@ void            acquiresleep(struct sleeplock*);
 void            releasesleep(struct sleeplock*);
 int             holdingsleep(struct sleeplock*);
 void            initsleeplock(struct sleeplock*, char*);
+
+void            acquire_max_lock(struct max_lock *);
+void            release_max_lock(struct max_lock *);
+void            initlock_max(struct max_lock*, char*);
+int             holding_max_lock(struct max_lock *);
 
 // string.c
 int             memcmp(const void*, const void*, uint);
@@ -167,6 +174,8 @@ extern uint     totoal_syscall_number;
 void            tvinit(void);
 extern struct spinlock tickslock;
 extern struct spinlock totsyslock;
+extern  struct max_lock testmax_lock;
+
 
 // uart.c
 void            uartinit(void);

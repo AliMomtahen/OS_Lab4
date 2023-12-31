@@ -10,13 +10,7 @@ int main(int argc, char *argv[])
 
         int pid = fork();
         if(pid == 0){
-            char inp[10] = "outfile";
-            inp[7] = '0' + i;
-            inp[8] = '\0';
-            int fd = open(inp , O_WRONLY );
-
-            write(fd , "hellow" , 7);
-            close(fd);
+            test_max_lock();
             exit();
         }
     }
@@ -24,7 +18,7 @@ int main(int argc, char *argv[])
     for(int i=0 ;i < 10 ; i++){
         wait();
     }
-    count_syscall();
+    
 
     exit();
 }

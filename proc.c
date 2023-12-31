@@ -646,6 +646,27 @@ wakeup(void *chan)
   release(&ptable.lock);
 }
 
+
+
+
+void wakeup_max(void *chan , int pid){
+  acquire(&ptable.lock);
+  
+  struct proc *p;
+  struct proc *res=0;
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    if(p->state == SLEEPING && p->chan == chan && pid == p->pid){
+        
+          res = p;
+          res->state = RUNNABLE;
+          break;
+    
+    }
+  }
+  
+  release(&ptable.lock);
+}
+
 // Kill the process with the given pid.
 // Process won't exit until it returns
 // to user space (see trap in trap.c).

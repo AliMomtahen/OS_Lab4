@@ -7,6 +7,7 @@
 #include "x86.h"
 #include "traps.h"
 #include "spinlock.h"
+#include "max_lock.h"
 
 // Interrupt descriptor table (shared by all CPUs).
 struct gatedesc idt[256];
@@ -16,6 +17,8 @@ uint ticks;
 
 struct spinlock totsyslock;
 uint totoal_syscall_number;
+
+struct max_lock testmax_lock;
 
 void
 tvinit(void)
@@ -28,6 +31,7 @@ tvinit(void)
 
   initlock(&tickslock, "time");
   initlock(&totsyslock , "totsyscallnum");
+  initlock_max(&testmax_lock , "test___MAXLOCK");
 }
 
 void
@@ -48,7 +52,7 @@ trap(struct trapframe *tf)
     acquire(&totsyslock);
     mycpu()->syscall_number++;
     totoal_syscall_number++;
-    wakeup(&totoal_syscall_number);
+    wakeup(&ticks);
     release(&totsyslock);
 
     

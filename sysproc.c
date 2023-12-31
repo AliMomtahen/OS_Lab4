@@ -161,3 +161,29 @@ int sys_print_info_proc(void){
   return 0;
 }
 
+
+int sys_test_max_lock(void){
+  acquire_max_lock(&testmax_lock);
+   
+  
+  int n=20;
+  uint ticks0;
+
+  acquire(&tickslock);
+  ticks0 = ticks;
+  while(ticks - ticks0 < n){
+    if(myproc()->killed){
+      release(&tickslock);
+      return -1;
+    }
+    sleep(&ticks, &tickslock);
+  }
+  release(&tickslock);
+  //wakeup(&ticks);
+  release_max_lock(&testmax_lock);
+
+
+  return 0;
+}
+
+
