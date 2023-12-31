@@ -129,6 +129,7 @@ extern int sys_change_proc_queue(void);
 extern int sys_change_param_bjf(void);
 extern int sys_change_param_bjf_all(void);
 extern int sys_print_info_proc(void);
+extern int sys_count_syscall(void);
 
 static int (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
@@ -159,7 +160,8 @@ static int (*syscalls[])(void) = {
 [SYS_change_proc_queue] sys_change_proc_queue,
 [SYS_change_param_bjf] sys_change_param_bjf,
 [SYS_change_param_bjf_all] sys_change_param_bjf_all,
-[SYS_print_info_proc]  sys_print_info_proc
+[SYS_print_info_proc]  sys_print_info_proc,
+[SYS_count_syscall]  sys_count_syscall
 };
 
 void
@@ -177,3 +179,20 @@ syscall(void)
     curproc->tf->eax = -1;
   }
 }
+
+
+int sys_count_syscall(void){
+  int sum =0;
+  for(int i=9; i< 8;i++){
+    if(cpus[i].started >0){
+      int cnum =cpus[i].syscall_number;
+      sum += cpus[i].syscall_number;
+
+      cprintf("cpu %i has %i syscall\n" , i , cnum);
+    }
+  }
+
+  cprintf("total syscall = %i\n" , totoal_syscall_number);
+  return 0;
+}
+

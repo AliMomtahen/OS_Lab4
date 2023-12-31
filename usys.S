@@ -37,5 +37,6 @@ SYSCALL(change_proc_queue)
 SYSCALL(change_param_bjf)
 SYSCALL(change_param_bjf_all)
 SYSCALL(print_info_proc)
+SYSCALL(count_syscall)
 
 

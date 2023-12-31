@@ -163,8 +163,10 @@ void            timerinit(void);
 // trap.c
 void            idtinit(void);
 extern uint     ticks;
+extern uint     totoal_syscall_number;
 void            tvinit(void);
 extern struct spinlock tickslock;
+extern struct spinlock totsyslock;
 
 // uart.c
 void            uartinit(void);

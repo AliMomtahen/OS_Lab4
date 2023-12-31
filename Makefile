@@ -190,6 +190,7 @@ UPROGS=\
 	_copy_file\
 	_wrProc\
 	_schedule\
+	_countsys\
 
 fs.img: mkfs README $(UPROGS)
 	./mkfs fs.img README $(UPROGS)
@@ -266,6 +267,7 @@ EXTRA=\
 	check_uncle.c\
 	wrProc.c\
 	schedule.c\
+	countsys.c\
 	README dot-bochsrc *.pl toc.* runoff runoff1 runoff.list\
 	.gdbinit.tmpl gdbutil\
 
